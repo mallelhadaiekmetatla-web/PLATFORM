@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% block title %}إعدادات المتجر{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">تخصيص المنصة</p><h1>إعدادات المتجر والاستيراد</h1><p class="muted">تُحفظ الإعدادات وسجل عمليات الاستيراد في قاعدة البيانات.</p></div></section>
+<section class="settings-section"><div class="section-title"><span class="section-icon">🏪</span><div><h2>بيانات المتجر وبطاقة السعر</h2><p class="muted">الاسم واللوغو ومقاسات الطباعة وإظهار الباركود.</p></div></div>
+<form method="post" enctype="multipart/form-data" class="form-panel">
+<div class="form-grid">
+<label>اسم المتجر<input name="store_name" required value="{{ settings.store_name }}"></label>
+<label>العملة الظاهرة<input name="currency" value="{{ settings.currency }}" maxlength="20" required></label>
+<label>عرض البطاقة (مم)<input type="number" min="25" max="150" name="label_width_mm" value="{{ settings.label_width_mm }}" required></label>
+<label>ارتفاع البطاقة (مم)<input type="number" min="20" max="150" name="label_height_mm" value="{{ settings.label_height_mm }}" required></label>
+<label class="wide">لوغو المتجر<input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp,.gif"></label>
+<label class="checkbox-row wide"><input type="checkbox" name="print_barcode" {% if settings.print_barcode %}checked{% endif %}> طباعة الباركود على بطاقة السعر افتراضيًا</label>
+</div>
+{% if settings.logo_path %}<p class="logo-preview">اللوغو الحالي: <img src="{{ url_for('static',filename=settings.logo_path) }}" alt="لوغو المتجر"></p>{% endif %}
+<div class="form-actions"><button class="btn primary" type="submit">حفظ الإعدادات</button><a class="btn secondary" target="_blank" href="{{ url_for('products',mode='cards') }}">معاينة المنتجات</a></div>
+</form></section>
+<section class="settings-section"><div class="section-title"><span class="section-icon">📊</span><div><h2>استيراد المنتجات من Excel</h2><p class="muted">ارفع الملف مرة واحدة. تحفظ المنتجات في قاعدة البيانات، ولا يعاد الاستيراد عند كل دخول.</p></div></div>
+<div class="info-box"><b>كيف تعمل المزامنة؟</b><br>الباركود المطابق يحدّث المنتج الموجود، والباركود الجديد ينشئ منتجًا جديدًا. الملف المطابق تمامًا لا يستورد مرة أخرى. لا تُحذف المنتجات التي لا تظهر في الملف تلقائيًا.</div>
+<form method="post" action="{{ url_for('import_excel') }}" enctype="multipart/form-data" class="upload-panel">
+<label class="file-drop">اختر ملف Excel (.xlsx أو .xls أو .xlsm)<input type="file" name="excel_file" accept=".xlsx,.xls,.xlsm" required></label>
+<button class="btn primary" type="submit" onclick="return confirm('سيتم استيراد الملف وتحديث المنتجات المطابقة حسب الباركود. هل تريد المتابعة؟')">رفع الملف وبدء الاستيراد</button>
+</form>
+<p class="muted small-text">تُقرأ الورقة الأولى. يجب أن يتعرف البرنامج على عمود اسم المنتج وعمود السعر. الباركود مهم جدًا لمنع التكرار.</p>
+</section>
+<section class="settings-section"><div class="section-title"><span class="section-icon">🕘</span><div><h2>سجل آخر عمليات الاستيراد</h2><p class="muted">معلومات محفوظة في PostgreSQL أو قاعدة البيانات المستخدمة.</p></div></div>
+<div class="table-wrap"><table><thead><tr><th>الملف</th><th>التاريخ</th><th>صفوف معالجة</th><th>جديد</th><th>محدّث</th><th>متجاوز</th></tr></thead><tbody>
+{% for rec in imports %}<tr><td>{{ rec.filename }}</td><td>{{ rec.imported_at.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ rec.imported_rows }}</td><td>{{ rec.created_rows }}</td><td>{{ rec.updated_rows }}</td><td>{{ rec.skipped_rows }}</td></tr>{% else %}<tr><td colspan="6" class="empty">لم يتم استيراد أي ملف حتى الآن.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

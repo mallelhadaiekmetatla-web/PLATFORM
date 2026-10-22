@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}إدارة المنتجات والأسعار{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+{% if session.get('admin_id') %}
+<header class="topbar">
+  <a class="brand" href="{{ url_for('products') }}">
+    {% if settings and settings.logo_path %}<img src="{{ url_for('static', filename=settings.logo_path) }}" alt="لوغو">{% endif %}
+    <span>{{ settings.store_name if settings else 'إدارة المنتجات' }}</span>
+  </a>
+  <nav>
+    <a href="{{ url_for('products') }}">الصفحة الرئيسية</a>
+    <a href="{{ url_for('product_new') }}">إضافة منتج</a>
+    <a href="{{ url_for('settings') }}">إعدادات المتجر والاستيراد</a>
+    <form method="post" action="{{ url_for('logout') }}" class="inline"><button class="nav-logout" type="submit">خروج</button></form>
+  </nav>
+</header>
+{% endif %}
+<main class="container">
+  {% for category, message in get_flashed_messages(with_categories=true) %}
+    <div class="alert {{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+<footer class="footer">إدارة المنتجات والأسعار · قاعدة البيانات هي مصدر البحث</footer>
+{% block scripts %}{% endblock %}
+</body></html>

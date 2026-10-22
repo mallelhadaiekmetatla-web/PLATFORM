@@ -1,0 +1,24 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>بطاقة سعر - {{ product.name }}</title>
+<style>
+@page{size:{{ settings.label_width_mm }}mm {{ settings.label_height_mm }}mm;margin:2mm}
+*{box-sizing:border-box}body{font-family:Arial,Tahoma,sans-serif;margin:0;color:#111}
+.label{width:{{ settings.label_width_mm }}mm;min-height:{{ settings.label_height_mm }}mm;padding:2mm;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;overflow:hidden}
+.logo{max-width:35%;max-height:10mm;object-fit:contain}.store{font-size:clamp(8px,2.5mm,13px);font-weight:bold}
+.name{font-size:clamp(10px,3.5mm,20px);font-weight:700;line-height:1.2;overflow-wrap:anywhere;max-height:30%;overflow:hidden}
+.price{font-size:clamp(18px,7mm,38px);font-weight:900;line-height:1.05;white-space:nowrap}
+.barcode{max-width:95%;height:12mm;object-fit:contain}.code{font-size:8px;letter-spacing:1px}
+.tools{display:flex;gap:8px;margin:12px auto;justify-content:center}.tools button{padding:8px 14px;cursor:pointer}
+@media print{.tools{display:none}}
+</style></head><body>
+<div class="tools"><button onclick="window.print()">طباعة البطاقة</button><button onclick="history.back()">رجوع</button></div>
+<div class="label">
+{% if settings.logo_path %}<img class="logo" src="{{ url_for('static',filename=settings.logo_path) }}" alt="لوغو">{% endif %}
+<div class="store">{{ settings.store_name }}</div>
+<div class="name">{{ product.name }}</div>
+<div class="price">{{ '%.2f'|format(product.price) }} {{ settings.currency }}</div>
+{% if settings.print_barcode and product.barcode %}
+<svg class="barcode" id="barcode"></svg><div class="code">{{ product.barcode }}</div>
+{% endif %}
+</div>
+{% if settings.print_barcode and product.barcode %}<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script><script>JsBarcode("#barcode",{{ product.barcode|tojson }},{format:"auto",displayValue:false,margin:0,height:35,width:1.4});</script>{% endif %}
+</body></html>

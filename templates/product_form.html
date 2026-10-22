@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block title %}{{ 'تعديل منتج' if product else 'إضافة منتج' }}{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">كتالوج المنتجات</p><h1>{{ 'تعديل المنتج' if product else 'إضافة منتج جديد' }}</h1><p class="muted">يتم حفظ المعلومات في قاعدة البيانات مباشرة.</p></div><a class="btn secondary" href="{{ url_for('products') }}">رجوع</a></section>
+<form class="form-panel" method="post" enctype="multipart/form-data">
+  <div class="form-grid">
+    <label>اسم المنتج *<input name="name" required maxlength="300" value="{{ product.name if product else '' }}"></label>
+    <label>كود الباركود<input name="barcode" value="{{ product.barcode if product and product.barcode else '' }}" inputmode="numeric"></label>
+    <label>سعر البيع *<input name="price" type="number" step="0.01" min="0" required value="{{ product.price if product else '' }}"></label>
+    <label>صورة المنتج<input name="image" type="file" accept=".png,.jpg,.jpeg,.webp,.gif"></label>
+    <label class="wide">ملاحظات<textarea name="note" rows="3">{{ product.note if product and product.note else '' }}</textarea></label>
+  </div>
+  {% if product and product.image %}<p>الصورة الحالية: <img class="thumb" src="{{ url_for('static',filename=product.image) }}" alt=""></p>{% endif %}
+  <div class="form-actions"><button class="btn primary" type="submit">حفظ المنتج</button><a class="btn secondary" href="{{ url_for('products') }}">إلغاء</a></div>
+</form>
+{% endblock %}

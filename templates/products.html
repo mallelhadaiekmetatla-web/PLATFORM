@@ -1,0 +1,57 @@
+{% extends "base.html" %}{% block title %}المنتجات{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">لوحة التحكم</p><h1>المنتجات</h1><p class="muted">ابحث بالاسم أو الباركود. نتائج البحث تُقرأ من قاعدة البيانات.</p></div><a class="btn primary" href="{{ url_for('product_new') }}">＋ إضافة منتج</a></section>
+<form class="search-panel" method="get" action="{{ url_for('products') }}">
+  <div class="search-field"><label for="q">بحث عن منتج</label><input id="q" name="q" value="{{ query }}" placeholder="اسم المنتج أو كود الباركود"></div>
+  <button class="btn primary" type="submit">بحث</button>
+  <button class="btn secondary" type="button" id="cameraOpen">📷 مسح باركود</button>
+  <div class="view-switch"><a class="{{ 'active' if mode == 'table' else '' }}" href="{{ url_for('products', q=query, mode='table') }}">جدول</a><a class="{{ 'active' if mode == 'cards' else '' }}" href="{{ url_for('products', q=query, mode='cards') }}">بطاقات</a></div>
+</form>
+<div id="cameraPanel" class="camera-panel hidden"><div id="reader"></div><button class="btn danger" type="button" id="cameraClose">إغلاق الكاميرا</button><p id="cameraMessage" class="muted"></p></div>
+<div class="result-line"><span>عدد النتائج في هذه الصفحة: <b>{{ pagination.items|length }}</b></span><span>الإجمالي: <b>{{ pagination.total }}</b></span></div>
+{% if mode == 'cards' %}
+<div class="product-grid">
+{% for p in pagination.items %}
+<article class="product-card">
+  <div class="product-photo">{% if p.image %}<img src="{{ url_for('static',filename=p.image) }}" alt="{{ p.name }}">{% else %}<span>صورة المنتج</span>{% endif %}</div>
+  <div class="product-card-body"><h3>{{ p.name }}</h3><p class="barcode">{{ p.barcode or 'بدون باركود' }}</p><div class="price">{{ '%.2f'|format(p.price) }} {{ settings.currency }}</div>
+  <div class="actions"><a class="btn small secondary" href="{{ url_for('product_edit',product_id=p.id) }}">✎ تعديل</a><a class="btn small secondary" href="{{ url_for('print_label',product_id=p.id) }}" target="_blank">طباعة</a>
+  <form method="post" action="{{ url_for('product_delete',product_id=p.id) }}" onsubmit="return confirm('هل تريد حذف هذا المنتج؟')"><button class="btn small danger" type="submit">حذف</button></form></div></div>
+</article>
+{% else %}<div class="empty">لا توجد منتجات. أضف منتجًا أو استورد ملف Excel.</div>{% endfor %}
+</div>
+{% else %}
+<div class="table-wrap"><table><thead><tr><th>الصورة</th><th>الباركود</th><th>اسم المنتج</th><th>السعر</th><th>آخر تحديث</th><th>الإجراءات</th></tr></thead><tbody>
+{% for p in pagination.items %}<tr><td>{% if p.image %}<img class="thumb" src="{{ url_for('static',filename=p.image) }}" alt="">{% else %}<span class="thumb-placeholder">—</span>{% endif %}</td><td class="barcode">{{ p.barcode or '—' }}</td><td class="name-cell">{{ p.name }}</td><td class="price-cell">{{ '%.2f'|format(p.price) }} {{ settings.currency }}</td><td>{{ p.updated_at.strftime('%Y-%m-%d %H:%M') }}</td><td><div class="actions"><a class="btn small secondary" href="{{ url_for('product_edit',product_id=p.id) }}">✎ تعديل</a><a class="btn small secondary" href="{{ url_for('print_label',product_id=p.id) }}" target="_blank">طباعة</a><form method="post" action="{{ url_for('product_delete',product_id=p.id) }}" onsubmit="return confirm('هل تريد حذف هذا المنتج؟')"><button class="btn small danger" type="submit">حذف</button></form></div></td></tr>
+{% else %}<tr><td colspan="6" class="empty">لا توجد منتجات. أضف منتجًا أو استورد ملف Excel.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% if pagination.pages > 1 %}<div class="pagination">{% if pagination.has_prev %}<a href="{{ url_for('products',q=query,mode=mode,page=pagination.prev_num) }}">السابق</a>{% endif %}<span>صفحة {{ pagination.page }} من {{ pagination.pages }}</span>{% if pagination.has_next %}<a href="{{ url_for('products',q=query,mode=mode,page=pagination.next_num) }}">التالي</a>{% endif %}</div>{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+ const openBtn=document.getElementById('cameraOpen'), closeBtn=document.getElementById('cameraClose');
+ const panel=document.getElementById('cameraPanel'), message=document.getElementById('cameraMessage');
+ let scanner=null, running=false, locked=false;
+ async function stop(){
+   if(scanner && running){try{await scanner.stop();}catch(e){} try{await scanner.clear();}catch(e){}}
+   scanner=null;running=false;locked=false;panel.classList.add('hidden');openBtn.disabled=false;
+ }
+ openBtn.addEventListener('click', async()=>{
+   panel.classList.remove('hidden');openBtn.disabled=true;message.textContent='جارٍ تشغيل الكاميرا...';
+   try{
+     scanner=new Html5Qrcode('reader');
+     await scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:260,height:130}},
+       async text=>{
+         if(locked)return;locked=true;message.textContent='تمت قراءة الباركود: '+text;
+         await stop();window.location.href={{ url_for('products')|tojson }}+'?q='+encodeURIComponent(text)+'&mode=table';
+       },()=>{});
+     running=true;message.textContent='وجّه الكاميرا نحو الباركود.';
+   }catch(e){message.textContent='تعذر فتح الكاميرا. اسمح باستخدامها وتأكد من فتح الموقع عبر HTTPS.';openBtn.disabled=false;}
+ });
+ closeBtn.addEventListener('click',stop);
+ window.addEventListener('pagehide',()=>{if(scanner&&running)scanner.stop().catch(()=>{});});
+})();
+</script>
+{% endblock %}

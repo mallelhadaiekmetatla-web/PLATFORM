@@ -1,0 +1,10 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>دخول الأدمين</title><link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head>
+<body class="login-body"><main class="login-card">
+  <div class="login-mark">▦</div><h1>إدارة المنتجات والأسعار</h1><p class="muted">سجّل الدخول للمتابعة</p>
+  {% for category, message in get_flashed_messages(with_categories=true) %}<div class="alert {{ category }}">{{ message }}</div>{% endfor %}
+  <form method="post">
+    <label>اسم المستخدم<input name="username" required autocomplete="username" autofocus></label>
+    <label>كلمة سر الأدمين<input name="password" type="password" required autocomplete="current-password"></label>
+    <button class="btn primary full" type="submit">دخول آمن</button>
+  </form>
+</main></body></html>
